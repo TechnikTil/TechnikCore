@@ -27,6 +27,18 @@ class CustomCapsuleRegistry extends BaseRegistry
     return entry;
   }
 
+  override function createScriptedEntry(clsName:String):Dynamic
+  {
+    var entry:CustomCapsule = CustomCapsule.scriptInit(clsName);
+    entry._data = parseEntryData(entry.id);
+    return entry;
+  }
+
+  override function getScriptedClassNames():Array<String>
+  {
+    return CustomCapsule.listScriptClasses();
+  }
+
   var entryData:StringMap;
 
   function checkEntryData():Void

@@ -62,7 +62,7 @@ class CustomCapsule
     }
   }
 
-  public function applyFreeplay(freeplay:FreeplayState, ?difficulty:String):Void
+  public function applyFreeplay(freeplay:FreeplayState, difficulty:String):Void
   {
     final albumRoll:AlbumRoll = freeplay.albumRoll;
 
@@ -78,6 +78,8 @@ class CustomCapsule
     final rating:Int = getRating(difficulty ?? '');
     if (rating != null) albumRoll.setDifficultyStars(rating);
   }
+
+  public function unapplyCapsule(capsule:SongMenuItem):Void {}
 
   public function getStyle():FreeplayStyle
   {

@@ -1,6 +1,7 @@
 package technikcore.ui;
 
 import funkin.ui.freeplay.FreeplayState;
+import haxe.ds.HashMap;
 
 class Freeplay extends Module
 {
@@ -20,6 +21,27 @@ class Freeplay extends Module
     var entryId:String = getEntryId(capsule.freeplayData);
     var customCap:CustomCapsule = CustomCapsuleRegistry.instance.fetchEntry(entryId);
     customCap?.applyCapsule(capsule, FreeplayState.rememberedDifficulty);
+
+    if (customCap != null && !capsuleWatch.contains(capsule))
+    {
+      capsuleWatch.push(capsule);
+      idWatch.push(entryId);
+    }
+  }
+
+  public function unapplyCustomCapsule(capsule:SongMenuItem):Void
+  {
+    var toRemove:Array<String> = [];
+    while (capsuleWatch.contains(capsule))
+    {
+      var entryId:String = idWatch[capsuleWatch.indexOf(capsule)];
+
+      var customCap:CustomCapsule = CustomCapsuleRegistry.instance.fetchEntry(entryId);
+      customCap?.unapplyCapsule(capsule);
+
+      capsuleWatch.remove(capsule);
+      idWatch.remove(entryId);
+    }
   }
 
   public function getEntryId(data:FreeplaySongData):String
@@ -38,6 +60,7 @@ class Freeplay extends Module
     super.onDifficultySwitch(event);
     if (freeplay == null) return;
 
+    freeplay.grpCapsules.forEachAlive(unapplyCustomCapsule);
     freeplay.grpCapsules.forEachAlive(applyCustomCapsule);
   }
 
@@ -76,6 +99,9 @@ class Freeplay extends Module
     {
       freeplay = event.targetState;
       introDone = false;
+
+      capsuleWatch = [];
+      idWatch = [];
     }
     else
     {
@@ -85,4 +111,7 @@ class Freeplay extends Module
 
   var freeplay:FreeplayState;
   var introDone:Bool;
+
+  var capsuleWatch:Array<SongMenuItem>;
+  var idWatch:Array<String>;
 }
