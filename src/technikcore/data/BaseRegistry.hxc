@@ -1,6 +1,5 @@
 package technikcore.data;
 
-import funkin.util.tools.IteratorTools;
 import funkin.util.assets.DataAssets;
 
 /**

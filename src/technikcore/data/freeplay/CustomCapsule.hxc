@@ -1,0 +1,119 @@
+package technikcore.data.freeplay;
+
+import funkin.data.freeplay.style.FreeplayStyleRegistry;
+import funkin.util.ReflectUtil;
+
+class CustomCapsule
+{
+  public final id:String;
+  final _data:Dynamic;
+
+  public function new(songId:String)
+  {
+    id = songId;
+  }
+
+  public function applyCapsule(capsule:SongMenuItem, difficulty:String):Void
+  {
+    var style:FreeplayStyle = getStyle();
+    if (style != null)
+    {
+      var frames:FlxAtlasFrames = Paths.getSparrowAtlas(style.getCapsuleAssetKey());
+      if (frames != capsule.capsule.frames)
+      {
+        capsule.capsule.frames = frames;
+        capsule.capsule.animation.addByPrefix('selected', 'mp3 capsule w backing0', 24);
+        capsule.capsule.animation.addByPrefix('unselected', 'mp3 capsule w backing NOT SELECTED', 24);
+        capsule.songText.applyStyle(style);
+      }
+    }
+
+    var songData:Dynamic = getSongData();
+    if (songData != null)
+    {
+      final name:String = songData.name;
+      if (name != null) capsule.songText.text = name;
+
+      final icon:String = songData.icon;
+      if (icon != null)
+      {
+        capsule.pixelIcon.setCharacter(icon);
+        capsule.pixelIcon.visible = icon == capsule.pixelIcon.char;
+      }
+
+      final bpm:Int = songData.bpm;
+      if (bpm != null) capsule.updateBPM(bpm);
+    }
+
+    final rating:Int = getRating(difficulty ?? '');
+    if (rating != null) capsule.updateDifficultyRating(rating);
+
+    final level:LevelCapsuleData = getLevelData();
+    if (level?.name != null)
+    {
+      capsule.createWeekTextGraphic(level.name);
+      capsule.weekText.loadGraphic(FlxG.bitmap.get(level.name));
+    }
+
+    if (level?.offsets != null)
+    {
+      capsule.weekText.offset.x = level.offsets[0] ?? 0;
+      capsule.weekText.offset.y = level.offsets[1] ?? 0;
+    }
+  }
+
+  public function applyFreeplay(freeplay:FreeplayState, ?difficulty:String):Void
+  {
+    final albumRoll:AlbumRoll = freeplay.albumRoll;
+
+    final albumId:String = getAlbumId();
+    if (albumId != null) albumRoll.albumId = albumId;
+
+    var newText:String = getAlbumOSTName() ?? albumRoll.getOSTNameOverride() ?? '';
+    var oldText:String = freeplay.ostName.text;
+
+    if (newText != oldText) freeplay.updateOSTName(true);
+    freeplay.ostName.text = newText;
+
+    final rating:Int = getRating(difficulty ?? '');
+    if (rating != null) albumRoll.setDifficultyStars(rating);
+  }
+
+  public function getStyle():FreeplayStyle
+  {
+    var id:String = _data.style;
+    if (id == null) return;
+
+    return FreeplayStyleRegistry.instance.fetchEntry(id);
+  }
+
+  public function getSongData():Dynamic
+  {
+    return _data.song;
+  }
+
+  public function getLevelData():LevelCapsuleData
+  {
+    return _data.level;
+  }
+
+  public function getRating(difficulty:String):Int
+  {
+    final ratings:Dynamic = getSongData()?.ratings;
+    if (ratings == null) return null;
+
+    return ReflectUtil.getAnonymousField(ratings, difficulty);
+  }
+
+  public function getAlbumId():String
+  {
+    var songData:Dynamic = getSongData();
+    return songData?.album;
+  }
+
+  public function getAlbumOSTName():String
+  {
+    var songData:Dynamic = getSongData();
+    return songData?.albumOSTName;
+  }
+}

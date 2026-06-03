@@ -1,5 +1,6 @@
 package technikcore;
 
+import funkin.util.tools.IteratorTools;
 import funkin.modding.module.Module;
 import funkin.util.SerializerUtil;
 

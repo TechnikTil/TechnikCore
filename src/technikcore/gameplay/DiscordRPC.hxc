@@ -1,7 +1,6 @@
 package technikcore.gameplay;
 
 import funkin.data.character.CharacterDataParser;
-import funkin.util.tools.IteratorTools;
 import funkin.play.PlayState;
 
 // NOTE:

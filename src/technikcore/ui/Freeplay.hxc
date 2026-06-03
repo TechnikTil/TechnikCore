@@ -1,0 +1,88 @@
+package technikcore.ui;
+
+import funkin.ui.freeplay.FreeplayState;
+
+class Freeplay extends Module
+{
+  public function new()
+  {
+    super('technikcore-Freeplay');
+  }
+
+  override public function onCreate(event:ScriptEvent):Void
+  {
+    super.onCreate(event);
+    CustomCapsuleRegistry.instance.loadEntries();
+  }
+
+  public function applyCustomCapsule(capsule:SongMenuItem):Void
+  {
+    var entryId:String = getEntryId(capsule.freeplayData);
+    var customCap:CustomCapsule = CustomCapsuleRegistry.instance.fetchEntry(entryId);
+    customCap?.applyCapsule(capsule, FreeplayState.rememberedDifficulty);
+  }
+
+  public function getEntryId(data:FreeplaySongData):String
+  {
+    if (data == null) return null;
+
+    var suffix:String = data.curVariation;
+    if (suffix == Constants.DEFAULT_VARIATION) suffix = '';
+    if (suffix.length > 0) suffix = '-${suffix}';
+
+    return data.songId + suffix;
+  }
+
+  override public function onDifficultySwitch(event:CapsuleScriptEvent):Void
+  {
+    super.onDifficultySwitch(event);
+    if (freeplay == null) return;
+
+    freeplay.grpCapsules.forEachAlive(applyCustomCapsule);
+  }
+
+  override public function onCapsuleSelected(event:CapsuleScriptEvent):Void
+  {
+    super.onCapsuleSelected(event);
+    applyCustomCapsule(event.capsule);
+
+    if (introDone)
+    {
+      var entryId:String = getEntryId(event.capsule.freeplayData);
+      var customCap:CustomCapsule = CustomCapsuleRegistry.instance.fetchEntry(entryId);
+      customCap?.applyFreeplay(freeplay, event.difficultyId);
+    }
+  }
+
+  override public function onFreeplayIntroDone(event:FreeplayScriptEvent):Void
+  {
+    super.onFreeplayIntroDone(event);
+    introDone = true;
+
+    var entryId:String = getEntryId(freeplay.currentCapsule.freeplayData);
+    var customCap:CustomCapsule = CustomCapsuleRegistry.instance.fetchEntry(entryId);
+
+    // TODO: the original OST text shows for a split second when entering an edited song.
+    FlxG.signals.postUpdate.addOnce(() -> {
+      customCap?.applyFreeplay(freeplay, FreeplayState.rememberedDifficulty);
+    });
+  }
+
+  override public function onSubStateOpenBegin(event:SubStateScriptEvent):Void
+  {
+    super.onSubStateOpenBegin(event);
+
+    if (Std.isOfType(event.targetState, FreeplayState))
+    {
+      freeplay = event.targetState;
+      introDone = false;
+    }
+    else
+    {
+      freeplay = null;
+    }
+  }
+
+  var freeplay:FreeplayState;
+  var introDone:Bool;
+}

@@ -1,0 +1,65 @@
+package technikcore.data.freeplay;
+
+class CustomCapsuleRegistry extends BaseRegistry
+{
+  public static var instance(get, never):CustomCapsuleRegistry;
+
+  static var _capsuleRegistryInstance:CustomCapsuleRegistry = null;
+  static function get_instance():CustomCapsuleRegistry
+  {
+    if (_capsuleRegistryInstance == null)
+    {
+      _capsuleRegistryInstance = new CustomCapsuleRegistry();
+    }
+
+    return _capsuleRegistryInstance;
+  }
+
+  public function new()
+  {
+    super('capsule', 'technikcore/freeplay');
+  }
+
+  override function createEntry(id:String):Dynamic
+  {
+    var entry:CustomCapsule = new CustomCapsule(id);
+    entry._data = parseEntryData(id);
+    return entry;
+  }
+
+  var entryData:StringMap;
+
+  function checkEntryData():Void
+  {
+    if (entryData != null) return;
+
+    var json:Dynamic = JsonUtil.loadJSON(dataFilePath);
+    entryData = JsonUtil.mapValues(json ?? {});
+  }
+
+  override function getEntryIdList():Array<String>
+  {
+    checkEntryData();
+    return IteratorTools.array(entryData.keys());
+  }
+
+  override function parseEntryData(id:String):Dynamic
+  {
+    checkEntryData();
+    return entryData.get(id);
+  }
+
+  override function loadEntryFile(id:String):Dynamic
+  {
+    return {
+      fileName: null,
+      contents: null
+    };
+  }
+
+  override public function clearEntries():Void
+  {
+    super.clearEntries();
+    entryData = null;
+  }
+}
