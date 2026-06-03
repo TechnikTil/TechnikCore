@@ -1,0 +1,26 @@
+package technikcore;
+
+using funkin.util.AnsiUtil;
+
+class Logger
+{
+  public static function error(text:String):Void
+  {
+    basic('${' ERROR '.error()} $text');
+  }
+
+  public static function warning(text:String):Void
+  {
+    basic('${' WARNING '.warning()} $text');
+  }
+
+  public static function info(text:String):Void
+  {
+    basic('${' INFO '.info()} $text');
+  }
+
+  public static function basic(text:String):Void
+  {
+    trace('${' TECHNIKCORE '.bg_yellow().bold()} $text');
+  }
+}

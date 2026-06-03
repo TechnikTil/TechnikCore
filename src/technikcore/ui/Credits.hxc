@@ -1,0 +1,75 @@
+package technikcore.ui;
+
+import funkin.ui.credits.CreditsState;
+
+class Credits extends Module
+{
+  public function new()
+  {
+    super('technikcore-Credits');
+  }
+
+  public var creditEntries:Array<CreditsDataRole>;
+
+  override public function onCreate(event:ScriptEvent):Void
+  {
+    super.onCreate(event);
+    creditEntries = [];
+
+    final data:Array<Array<CreditsDataRole>> = getData();
+    if (data == null) return;
+
+    Logger.info('Parsing ${data.length} credit sections...');
+
+    for (section in data)
+    {
+      for (i in section) creditEntries.push(i);
+
+      // Add 2 empty headers to seperate each section.
+      for (i in 0...2) creditEntries.push(emptyLine());
+    }
+
+    Logger.info('Successfully registered and converted ${data.length} sections.');
+  }
+
+  override public function onStateChangeEnd(event:StateChangeScriptEvent):Void
+  {
+    final targetState:FlxState = event.targetState;
+    if (!Std.isOfType(targetState, CreditsState)) return;
+
+    Logger.info('Injecting ${creditEntries.length} headers into Credits...');
+
+    final entriesToAppend:Array<CreditsEntry> = creditEntries.map(entry -> {
+      return {
+        data: entry,
+        lineIndexToBuild: 0,
+        backerIndexToBuild: 0,
+        hasBuiltHeader: entry.header == null,
+        hasBuiltBody: 1 > (entry.body?.length ?? 0),
+        hasBuiltBackers: true
+      };
+    });
+
+    final oldLength:Int = targetState.entriesToBuild.length;
+    targetState.entriesToBuild = entriesToAppend.concat(targetState.entriesToBuild);
+    final newLength:Int = targetState.entriesToBuild.length;
+
+    Logger.info('Successfully injected headers into Credits (${oldLength} -> ${newLength})');
+  }
+
+  static function getData():Array<Dynamic>
+  {
+    var json:Array<Dynamic> = JsonUtil.loadJSON('technikcore/credits');
+
+    if (json == null || !Std.isOfType(json, Array)) return null;
+    return json;
+  }
+
+  static function emptyLine():CreditsDataRole
+  {
+    return {
+      header: ' ',
+      body: []
+    };
+  }
+}

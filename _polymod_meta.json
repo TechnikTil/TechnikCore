@@ -1,0 +1,18 @@
+{
+  "id": "technikdependency",
+  "title": "TechnikDependency",
+  "description": "Useful utilities for any V-Slice Mod!",
+  "contributors": [
+    {
+      "name": "TechnikTil",
+      "role": "Basically everything",
+      "email": "techniktil@tilnotdrip.org",
+      "url": "https://techniktil.tilnotdrip.org"
+    }
+  ],
+  "dependencies": {},
+  "optionalDependencies": {},
+  "api_version": "0.8.5",
+  "mod_version": "0.1.0",
+  "license": "MIT"
+}

@@ -1,0 +1,6 @@
+package technikcore;
+
+import funkin.modding.module.Module;
+import funkin.util.SerializerUtil;
+
+import haxe.ds.StringMap;

@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "polymod-metadata",
+  "title": "Polymod Metadata",
+  "type": "object",
+  "required": ["api_version", "mod_version"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "The internal ID of the mod."
+    },
+    "title": {
+      "type": "string",
+      "description": "The human-readable name of the mod."
+    },
+    "description": {
+      "type": "string",
+      "description": "A short description of the mod."
+    },
+    "homepage": {
+      "type": "string",
+      "format": "uri",
+      "description": "A link to the homepage for a mod."
+    },
+    "api_version": {
+      "$ref": "#/definitions/version",
+      "description": "A version number for the API used by the mod."
+    },
+    "mod_version": {
+      "$ref": "#/definitions/version",
+      "description": "A version number for the mod itself."
+    },
+    "license": {
+      "type": "string",
+      "description": "The name of a license determining the terms of use for the mod."
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "description": "Provides an optional list of keys."
+    },
+    "dependencies": {
+      "$ref": "#/definitions/modDependencies"
+    },
+    "optionalDependencies": {
+      "$ref": "#/definitions/modDependencies"
+    },
+    "author": {
+      "type": "string",
+      "description": "A deprecated field representing the mod's author."
+    },
+    "contributors": {
+      "type": "array",
+      "description": "A list of contributors to the mod.",
+      "items": {
+        "$ref": "#/definitions/contributors"
+      }
+    }
+  },
+  "definitions": {
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "modDependencies": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "description": "The required version rule (e.g., '1.0.0' or '*.*.*')."
+      },
+      "description": "A list of dependencies."
+    },
+    "contributors": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "email": { "type": ["string", "null"], "format": "email" },
+        "url": { "type": ["string", "null"], "format": "uri" }
+      }
+    }
+  }
+}

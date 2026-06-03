@@ -1,0 +1,102 @@
+package technikcore.gameplay;
+
+import funkin.data.character.CharacterDataParser;
+import funkin.util.tools.IteratorTools;
+import funkin.play.PlayState;
+
+// NOTE:
+// Due to Funkin' commit `28cbf37`,
+// this utility will be deprecated
+// as soon as it sees a public release.
+
+class DiscordRPC extends Module
+{
+  public function new()
+  {
+    super('technikcore-DiscordRPC');
+  }
+
+  #if FEATURE_DISCORD_RPC
+  public var albums:StringMap;
+  public var icons:StringMap;
+
+  var lastDiscordAlbum:String = null;
+  var lastDiscordIcon:String = null;
+
+  override public function onCreate(event:ScriptEvent):Void
+  {
+    super.onCreate(event);
+
+    final json:Dynamic = JsonUtil.loadJSON('technikcore/discord');
+
+    albums = JsonUtil.mapValues(json?.albums ?? {});
+    registerMessage(albums.keys(), 'Albums');
+
+    icons = JsonUtil.mapValues(json?.icons ?? {});
+    registerMessage(icons.keys(), 'Icons');
+  }
+
+  function checkAlbum():Void
+  {
+    var albumId:String = PlayState.instance?.currentChart?.album ?? '';
+    Logger.info('Looking for Discord RPC Album "$albumId"...');
+
+    var albumKey:String = albums.get(albumId);
+    if (albumKey == null) return;
+
+    PlayState.instance.discordRPCAlbum = albumKey;
+    Logger.info('Set Discord RPC Album successfully!');
+  }
+
+  function checkIcon():Void
+  {
+    var dadId:BaseCharacter = PlayState.instance?.currentChart?.characters?.opponent ?? '';
+    var dadData:CharacterData = CharacterDataParser.fetchCharacterData(dadId);
+
+    var iconId:String = dadData?.healthIcon?.id;
+    if (iconId == null) iconId = dataId;
+
+    Logger.info('Looking for Discord RPC Icon "$iconId"...');
+
+    var iconKey:String = icons.get(iconId);
+    if (iconKey == null) return;
+
+    PlayState.instance.discordRPCIcon = iconKey;
+    Logger.info('Set Discord RPC Icon successfully!');
+  }
+
+  override public function onUpdate(event:UpdateScriptEvent):Void
+  {
+    if (PlayState.instance == null) return;
+
+    if (lastDiscordAlbum != PlayState.instance.discordRPCAlbum)
+    {
+      checkAlbum();
+      lastDiscordAlbum = PlayState.instance.discordRPCAlbum;
+    }
+
+    if (lastDiscordIcon != PlayState.instance.discordRPCIcon)
+    {
+      checkIcon();
+      lastDiscordIcon = PlayState.instance.discordRPCIcon;
+    }
+  }
+
+  static function registerMessage(iterator:Iterator, type:String):Void
+  {
+    var list:Array<String> = IteratorTools.array(iterator);
+    var message:String =
+      'Registered '
+      + list.length
+      + ' custom Discord RPC '
+      + type;
+
+    if (list.length > 0)
+    {
+      message += ' (' + list.join(', ') + ')';
+    }
+
+    Logger.info(message);
+  }
+  #end
+}

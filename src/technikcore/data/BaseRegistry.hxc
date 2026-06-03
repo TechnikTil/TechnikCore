@@ -1,0 +1,222 @@
+package technikcore.data;
+
+import funkin.util.tools.IteratorTools;
+import funkin.util.assets.DataAssets;
+
+/**
+ * A base type for a Registry, which is an object which handles loading scriptable objects.
+ *
+ * This is a direct port from the original source code,
+ * and is edited to be available to scripts.
+ */
+class BaseRegistry
+{
+  /**
+   * The ID of the registry. Used when logging.
+   */
+  public final id:String;
+
+  final dataFilePath:String;
+
+  /**
+   * A map of entry IDs to entries.
+   */
+  final entries:StringMap;
+
+  /**
+   * A map of entry IDs to scripted class names.
+   */
+  final scriptedEntryIds:StringMap;
+
+  /**
+   * @param id A readable ID for this registry, used when logging.
+   * @param dataFilePath The path (relative to `assets/data`) to search for JSON files.
+   */
+  public function new(id:String, dataFilePath:String)
+  {
+    this.id = id;
+    this.dataFilePath = dataFilePath;
+
+    this.entries = new StringMap();
+    this.scriptedEntryIds = new StringMap();
+  }
+
+  public function loadEntries():Void
+  {
+    clearEntries();
+
+        //
+    // SCRIPTED ENTRIES
+    //
+    var scriptedEntryClassNames:Array<String> = getScriptedClassNames();
+    Logger.info('Parsing ${scriptedEntryClassNames.length} scripted entries for "$id"...');
+
+    for (entryCls in scriptedEntryClassNames)
+    {
+      var entry:Dynamic = null;
+
+      try
+      {
+        entry = createScriptedEntry(entryCls);
+      }
+      catch(e:Exception) {}
+
+      if (entry != null)
+      {
+        Logger.info('Successfully created scripted entry ($entryCls = ${entry.id})');
+
+        entries.set(entry.id, entry);
+        scriptedEntryIds.set(entry.id, entryCls);
+      }
+      else
+      {
+        Logger.warning('Failed to create scripted entry ($entryCls)');
+      }
+    }
+
+    //
+    // UNSCRIPTED ENTRIES
+    //
+    var entryIdList:Array<String> = DataAssets.listDataFilesInPath('$dataFilePath/');
+    var unscriptedEntryIds:Array<String> = entryIdList.filter(id -> !entries.exists(id));
+
+    Logger.info('Parsing ${unscriptedEntryIds.length} unscripted entries for "$id"...');
+    for (entryId in unscriptedEntryIds)
+    {
+      try
+      {
+        var entry:Dynamic = createEntry(entryId);
+        if (entry != null)
+        {
+          Logger.info('Loaded entry data: $entryId');
+          entries.set(entryId, entry);
+        }
+      }
+      catch(e:Exception)
+      {
+        Logger.warning('Failed to load entry data: $entryId\n$e');
+        continue;
+      }
+    }
+  }
+
+  /**
+   * Retrieve a list of all entry IDs in this registry.
+   * @return The list of entry IDs.
+   */
+  public function listEntryIds():Array<String>
+  {
+    return IteratorTools.array(entries.keys());
+  }
+
+  /**
+   * Count the number of entries in this registry.
+   * @return The number of entries.
+   */
+  public function countEntries():Int
+  {
+    return listEntryIds().length;
+  }
+
+  /**
+   * Return whether the entry ID is known to have an attached script.
+   * @param id The ID of the entry.
+   * @return `true` if the entry has an attached script, `false` otherwise.
+   */
+  public function isScriptedEntry(id:String):Bool
+  {
+    return scriptedEntryIds.exists(id);
+  }
+
+  /**
+   * Return the class name of the scripted entry with the given ID, if it exists.
+   * @param id The ID of the entry.
+   * @return The class name, or `null` if it does not exist.
+   */
+  public function getScriptedEntryClassName(id:String):String
+  {
+    return scriptedEntryIds.get(id);
+  }
+
+  /**
+   * Return whether the registry has successfully parsed an entry with the given ID.
+   * @param id The ID of the entry.
+   * @return `true` if the entry exists, `false` otherwise.
+   */
+  public function hasEntry(id:String):Bool
+  {
+    return entries.exists(id);
+  }
+
+  /**
+   * Fetch an entry by its ID.
+   * @param id The ID of the entry to fetch.
+   * @return The entry, or `null` if it does not exist.
+   */
+  public function fetchEntry(id:String):Dynamic
+  {
+    return entries.get(id);
+  }
+
+  public function toString():String
+  {
+    return 'Registry(' + id + ', ' + countEntries() + ' entries)';
+  }
+
+  function loadEntryFile(id:String):Dynamic
+  {
+    var entryFilePath:String = Paths.json('${dataFilePath}/${id}');
+    var rawJson:String = Assets.getText(entryFilePath);
+
+    return {
+      fileName: entryFilePath,
+      contents: rawJson
+    };
+  }
+
+  function clearEntries():Void
+  {
+    for (entry in entries)
+    {
+      entry.destroy();
+    }
+
+    entries.clear();
+  }
+
+  /**
+   * Read, parse, and validate the JSON data and produce the corresponding data object.
+   *
+   * NOTE: Must be implemented on the implementation class.
+   * @param id The ID of the entry.
+   * @return The created entry.
+   */
+  public function parseEntryData(id:String):Dynamic
+  {
+    var file:Dynamic = loadEntryFile(id);
+    return SerializerUtil.fromJSON(file.contents);
+  }
+
+  /**
+   * Retrieve the list of scripted class names to load.
+   * @return An array of scripted class names.
+   */
+  function getScriptedClassNames():Array<String>
+  {
+    return [];
+  }
+
+  /**
+   * Create an entry from the given ID.
+   * @param id
+   */
+  function createEntry(id:String):Dynamic
+  {
+    throw "createEntry() needs to be implemented!";
+  }
+
+  function createScriptedEntry(clsName:String):Dynamic
+  {
+    throw "createScriptedEntry() needs to be implemented!";
+  }
+}

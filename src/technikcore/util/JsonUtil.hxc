@@ -1,0 +1,39 @@
+package technikcore.util;
+
+import funkin.util.ReflectUtil;
+
+class JsonUtil
+{
+  public static function loadJSON(path:String):Dynamic
+  {
+    var fullPath:String = Paths.json(path);
+    var json:Dynamic = null;
+
+    try
+    {
+      var content:String = Assets.getText(fullPath);
+      json = SerializerUtil.fromJSON(content);
+    }
+    catch(e:Exception)
+    {
+      Logger.error('Error parsing "${path}", does it exist and is a proper json?');
+      json = null;
+    }
+
+    return json;
+  }
+
+  public static function mapValues(object:Dynamic):StringMap
+  {
+    var map:StringMap = new StringMap();
+
+    final fields:Array<String> = ReflectUtil.getAnonymousFieldsOf(object);
+    for (field in fields)
+    {
+      final value:Dynamic = ReflectUtil.getAnonymousField(object, field);
+      map.set(field, value);
+    }
+
+    return map;
+  }
+}
