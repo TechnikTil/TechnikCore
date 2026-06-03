@@ -77,7 +77,7 @@ class BaseRegistry
     //
     // UNSCRIPTED ENTRIES
     //
-    var entryIdList:Array<String> = DataAssets.listDataFilesInPath('$dataFilePath/');
+    var entryIdList:Array<String> = getEntryIdList();
     var unscriptedEntryIds:Array<String> = entryIdList.filter(id -> !entries.exists(id));
 
     Logger.info('Parsing ${unscriptedEntryIds.length} unscripted entries for "$id"...');
@@ -90,6 +90,10 @@ class BaseRegistry
         {
           Logger.info('Loaded entry data: $entryId');
           entries.set(entryId, entry);
+        }
+        else
+        {
+          throw '';
         }
       }
       catch(e:Exception)
@@ -176,11 +180,6 @@ class BaseRegistry
 
   function clearEntries():Void
   {
-    for (entry in entries)
-    {
-      entry.destroy();
-    }
-
     entries.clear();
   }
 
@@ -204,6 +203,15 @@ class BaseRegistry
   function getScriptedClassNames():Array<String>
   {
     return [];
+  }
+
+  /**
+   * Retrieve a list of all entry IDs.
+   * @return
+   */
+  function getEntryIdList():Array<String>
+  {
+    return DataAssets.listDataFilesInPath('$dataFilePath/');
   }
 
   /**
