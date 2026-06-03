@@ -1,0 +1,5 @@
+# Force LF Line Endings
+* text=auto eol=lf
+
+# Recognize .hxc files as Haxe files.
+*.hxc linguist-language=Haxe
