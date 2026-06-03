@@ -1,0 +1,46 @@
+package technikcore.ui;
+
+import funkin.ui.mainmenu.MainMenuState;
+import funkin.modding.PolymodHandler;
+import thx.semver.Version;
+
+class VersionWatermark extends Module
+{
+  var watermarkText:String;
+
+  public function new()
+  {
+    super('TechnikCore-VersionWatermark');
+  }
+
+  override public function onCreate(event:ScriptEvent):Void
+  {
+    var path:String = Paths.txt('technikcore/versionWatermarkList');
+    var contents:String = Assets.exists(path) ? Assets.getText(path) : '';
+    var modIds:Array<String> = contents.trim().split('\n');
+
+    Logger.info('Registered ${modIds.length} watermarks for the Main Menu.');
+
+    watermarkText = modIds.map(id -> {
+      var metadata:ModMetadata = PolymodHandler.modFileSystem.getMetadataById(id);
+      var version:String = Version.toString(metadata.modVersion);
+      return '${metadata.title} v$version';
+    }).join('\n');
+
+    super.onCreate(event);
+  }
+
+  override public function onStateChangeEnd(event:StateChangeEvent):Void
+  {
+    super.onStateChangeEnd(event);
+    if (!Std.isOfType(event.targetState, MainMenuState)) return;
+
+    final rightWatermarkText:FlxText = event.targetState.rightWatermarkText;
+
+    final oldText:String = rightWatermarkText.text;
+    rightWatermarkText.text = watermarkText;
+    if (oldText.length > 0) rightWatermarkText.text += '\n$oldText';
+
+    rightWatermarkText.y = FlxG.height - rightWatermarkText.height;
+  }
+}
