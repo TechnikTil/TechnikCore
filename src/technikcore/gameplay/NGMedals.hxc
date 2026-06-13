@@ -1,0 +1,72 @@
+package technikcore.gameplay;
+
+import funkin.modding.module.Module;
+import flixel.graphics.FlxGraphic;
+import technikcore.data.medals.MedalRegistry;
+import funkin.play.PlayState;
+import funkin.play.PlayStatePlaylist;
+import funkin.data.story.level.LevelRegistry;
+import flixel.util.FlxTimer;
+import flixel.util.FlxSave;
+import funkin.save.Save;
+#if !mobile
+import funkin.util.plugins.NewgroundsMedalPlugin;
+#end
+
+class NGMedals extends Module
+{
+  public function new()
+  {
+    super('technikcore-ng-medals');
+    #if mobile
+    active = false;
+    #end
+  }
+
+  private var medalReg:MedalRegistry;
+
+  override public function onCreate(event:ScriptEvent)
+  {
+    super.onCreate(event);
+
+    medalReg = new MedalRegistry('NGMedals', 'technikcore/medals');
+
+    medalReg.loadEntries();
+  }
+
+  //First, do a check for the song. THEN do a check for the level.
+  override public function onSongEnd(event:ScriptEvent)
+  {
+    super.onSongEnd(event);
+    if(PlayState.instance.isChartingMode) return;
+    if(event.eventCanceled) return;
+    if(PlayState.instance.isMinimalMode) return;
+
+
+    var curSongID:String = PlayState.instance.currentSong.id;
+    var curLevelSongs = LevelRegistry.instance.fetchEntry(PlayStatePlaylist.campaignId)?.getSongs();
+    for(entryKey => entryValue in medalReg.entries)
+    {
+      trace(entryKey, entryValue);
+      if(entryValue.triggerID == curSongID || entryValue.triggerID == curLevelSongs[curLevelSongs.length - 1])
+      {
+        var hasObtainedPrior = Save.instance.modOptions.exists('technikcore-medals-$entryKey');
+        hasObtainedPrior = false;
+        if(hasObtainedPrior) return;
+        new FlxTimer().start(0.6, _ ->
+        {
+          displayMedal(entryValue.pts, entryValue.title, entryValue.graphic);
+          Save.instance.modOptions.set('technikcore-medals-$entryKey', true);
+          Logger.basic('Applied medal $entryKey');
+        });
+      }
+    }
+  }
+
+  public function displayMedal(pts:Int, title:String, graphic:String)
+  {
+    var iconGraphic:FlxGraphic = FlxGraphic.fromBitmapData(Assets.getBitmapData(Paths.image(graphic)));
+    iconGraphic.persist = true;
+    NewgroundsMedalPlugin.play(pts, title, iconGraphic);
+  }
+}

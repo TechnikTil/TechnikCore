@@ -1,0 +1,49 @@
+package technikcore.data.medals;
+
+import technikcore.data.BaseRegistry;
+import technikcore.util.JsonUtil;
+
+class MedalRegistry extends BaseRegistry
+{
+  override public function new(id:String, dataFilePath:String)
+  {
+    super(id, dataFilePath);
+  }
+
+  override function createEntry(id:String):CustomMedal
+  {
+    var result:CustomMedal = JsonUtil.loadJSON('$dataFilePath/$id');
+    return result;
+  }
+
+  override function createScriptedEntry(clsName:String):Dynamic
+  {
+    throw new haxe.Exception("Scripted medal entires currently unsupported.");
+  }
+}
+
+
+typedef CustomMedal =
+{
+  /**
+   * The amount of points at the top right of the medal.
+   * @default 10
+   */
+  @:optional
+  var pts:Int;
+
+  /**
+   * The title for this medal.
+   */
+  var title:String;
+
+  /**
+   * The path to the graphic/icon you want to use for the medal.
+   */
+  var graphic:String;
+
+  /**
+   * The level or song you want the medal to trigger on.
+   */
+  var triggerID:String;
+}
