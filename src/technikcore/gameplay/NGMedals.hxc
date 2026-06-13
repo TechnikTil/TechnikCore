@@ -47,18 +47,13 @@ class NGMedals extends Module
     var curLevelSongs = LevelRegistry.instance.fetchEntry(PlayStatePlaylist.campaignId)?.getSongs();
     for(entryKey => entryValue in medalReg.entries)
     {
-      trace(entryKey, entryValue);
       if(entryValue.triggerID == curSongID || entryValue.triggerID == curLevelSongs[curLevelSongs.length - 1])
       {
         var hasObtainedPrior = Save.instance.modOptions.exists('technikcore-medals-$entryKey');
-        hasObtainedPrior = false;
         if(hasObtainedPrior) return;
-        new FlxTimer().start(0.6, _ ->
-        {
-          displayMedal(entryValue.pts, entryValue.title, entryValue.graphic);
-          Save.instance.modOptions.set('technikcore-medals-$entryKey', true);
-          Logger.basic('Applied medal $entryKey');
-        });
+        displayMedal(entryValue.pts, entryValue.title, entryValue.graphic);
+        Save.instance.modOptions.set('technikcore-medals-$entryKey', true);
+        Logger.basic('Applied medal $entryKey');
       }
     }
   }
